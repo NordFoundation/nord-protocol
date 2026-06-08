@@ -5,70 +5,86 @@ import { t } from '../i18n'
 
 interface PoolRow {
   pair: string
+  iconA: string
+  iconB: string
   tvl: string
   volume24h: string
   apr: string
+  fee: string
 }
 
 const MOCK_POOLS: PoolRow[] = [
-  { pair: 'WFUSE / USDC', tvl: '$85,420', volume24h: '$12,340', apr: '14.2%' },
-  { pair: 'WFUSE / BUSD', tvl: '$42,100', volume24h: '$5,670', apr: '11.8%' },
-  { pair: 'USDC / BUSD', tvl: '$22,800', volume24h: '$3,210', apr: '8.5%' },
-  { pair: 'NORD / WFUSE', tvl: '$5,680', volume24h: '$890', apr: '—' },
+  { pair: 'WFUSE / USDC', iconA: '🔥', iconB: '💲', tvl: '$85,420', volume24h: '$12,340', apr: '14.2%', fee: '0.30%' },
+  { pair: 'WFUSE / BUSD', iconA: '🔥', iconB: '💲', tvl: '$42,100', volume24h: '$5,670', apr: '11.8%', fee: '0.30%' },
+  { pair: 'USDC / BUSD', iconA: '💲', iconB: '💲', tvl: '$22,800', volume24h: '$3,210', apr: '8.5%', fee: '0.05%' },
+  { pair: 'NORD / WFUSE', iconA: '💎', iconB: '🔥', tvl: '$5,680', volume24h: '$890', apr: '—', fee: '0.30%' },
+  { pair: 'NORD / USDC', iconA: '💎', iconB: '💲', tvl: '$3,200', volume24h: '$450', apr: '—', fee: '0.30%' },
+  { pair: 'cUSD / USDC', iconA: '💲', iconB: '💲', tvl: '$98,000', volume24h: '$22,100', apr: '6.2%', fee: '0.05%' },
 ]
 
 export function Pool() {
   const navigate = useNavigate()
   const { lang } = useStore()
-  const [pools] = useState<PoolRow[]>(MOCK_POOLS)
+  const [search, setSearch] = useState('')
+
+  const filtered = MOCK_POOLS.filter(p =>
+    p.pair.toLowerCase().includes(search.toLowerCase())
+  )
 
   return (
     <div className="page">
-      <div className="section-header">
-        <h2 className="section-title" style={{ margin: 0 }}>{t(lang, 'pool.allPools')}</h2>
-        <button className="btn-primary" style={{ width: 'auto', padding: '10px 24px' }} onClick={() => navigate('/liquidity')}>
-          <i className="fas fa-plus"></i> {t(lang, 'pool.addLiquidity')}
+      <div className="pool-header">
+        <div>
+          <h2 className="pool-title">Pools</h2>
+          <p className="pool-subtitle">Earn fees by providing liquidity</p>
+        </div>
+        <button className="btn-primary" style={{ width: 'auto', padding: '12px 28px', fontSize: '.9rem' }} onClick={() => navigate('/liquidity')}>
+          <i className="fas fa-plus"></i> New Position
         </button>
       </div>
 
-      {pools.length > 0 ? (
-        <div className="table-wrap">
-          <table>
-            <thead>
-              <tr>
-                <th>{t(lang, 'pool.pair')}</th>
-                <th>{t(lang, 'pool.tvl')}</th>
-                <th>{t(lang, 'pool.volume24h')}</th>
-                <th>{t(lang, 'pool.apr')}</th>
-                <th></th>
-              </tr>
-            </thead>
-            <tbody>
-              {pools.map((p) => (
-                <tr key={p.pair}>
-                  <td style={{ fontWeight: 600 }}>{p.pair}</td>
-                  <td>{p.tvl}</td>
-                  <td>{p.volume24h}</td>
-                  <td style={{ color: p.apr !== '—' ? 'var(--success)' : 'var(--text-secondary)' }}>{p.apr}</td>
-                  <td>
-                    <button className="btn-secondary" style={{ padding: '6px 16px', fontSize: '.8rem' }} onClick={() => navigate('/liquidity')}>
-                      <i className="fas fa-plus"></i>
-                    </button>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
-      ) : (
-        <div className="card" style={{ textAlign: 'center', padding: '60px 24px' }}>
-          <div style={{ fontSize: '3rem', marginBottom: '16px' }}>💧</div>
-          <p style={{ color: 'var(--text-secondary)' }}>{t(lang, 'pool.noPools')}</p>
-          <button className="btn-primary" style={{ width: 'auto', marginTop: '20px', display: 'inline-block' }} onClick={() => navigate('/liquidity')}>
-            {t(lang, 'pool.createPair')}
-          </button>
-        </div>
-      )}
+      <div className="pool-search-bar">
+        <i className="fas fa-search" style={{ color: 'var(--text-secondary)' }}></i>
+        <input
+          placeholder="Search by pair name"
+          value={search}
+          onChange={(e) => setSearch(e.target.value)}
+        />
+      </div>
+
+      <div className="pool-grid">
+        {filtered.length > 0 ? filtered.map((p) => (
+          <div key={p.pair} className="pool-card" onClick={() => navigate('/liquidity')}>
+            <div className="pool-card-top">
+              <div className="pool-card-icons">
+                <span className="pool-icon">{p.iconA}</span>
+                <span className="pool-icon">{p.iconB}</span>
+              </div>
+              <span className="pool-card-fee">{p.fee}</span>
+            </div>
+            <div className="pool-card-pair">{p.pair}</div>
+            <div className="pool-card-stats">
+              <div className="pool-card-stat">
+                <span className="pool-card-stat-label">TVL</span>
+                <span className="pool-card-stat-value">{p.tvl}</span>
+              </div>
+              <div className="pool-card-stat">
+                <span className="pool-card-stat-label">Volume 24h</span>
+                <span className="pool-card-stat-value">{p.volume24h}</span>
+              </div>
+              <div className="pool-card-stat">
+                <span className="pool-card-stat-label">APR</span>
+                <span className="pool-card-stat-value" style={{ color: p.apr !== '—' ? 'var(--success)' : 'var(--text-secondary)' }}>{p.apr}</span>
+              </div>
+            </div>
+          </div>
+        )) : (
+          <div className="pool-empty">
+            <div className="pool-empty-icon">🔍</div>
+            <p>No pools found</p>
+          </div>
+        )}
+      </div>
     </div>
   )
 }

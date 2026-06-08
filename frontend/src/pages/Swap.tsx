@@ -19,6 +19,8 @@ export function Swap() {
   const [loading, setLoading] = useState(false)
   const [needsApproval, setNeedsApproval] = useState(false)
   const [done, setDone] = useState('')
+  const [showSettings, setShowSettings] = useState(false)
+  const [slippage, setSlippage] = useState('0.5')
 
   const fromTokenAddr = fromToken?.address as `0x${string}` | undefined
   const toTokenAddr = toToken?.address as `0x${string}` | undefined
@@ -29,9 +31,7 @@ export function Swap() {
       try {
         const amountIn = toWei(fromAmount, fromToken.decimals)
         const amounts = await getAmountsOut(amountIn, [fromTokenAddr!, toTokenAddr!])
-        if (amounts.length > 1) {
-          setToAmount(fromWei(amounts[amounts.length - 1], toToken.decimals))
-        }
+        if (amounts.length > 1) setToAmount(fromWei(amounts[amounts.length - 1], toToken.decimals))
       } catch { setToAmount('') }
     }
     fetch()
@@ -54,13 +54,11 @@ export function Swap() {
       const amountIn = toWei(fromAmount, fromToken.decimals)
       const amounts = await getAmountsOut(amountIn, [fromTokenAddr!, toTokenAddr!])
       if (!amounts.length) throw new Error('No liquidity')
-      const amountOutMin = amounts[amounts.length - 1] * 995n / 1000n
+      const amountOutMin = amounts[amounts.length - 1] * BigInt(Math.round((100 - parseFloat(slippage)) * 10)) / 1000n
       const deadline = BigInt(Math.floor(Date.now() / 1000) + 1200)
       await swap(amountIn, amountOutMin, [fromTokenAddr!, toTokenAddr!], account as `0x${string}`, deadline, account as `0x${string}`)
-      setFromAmount(''); setDone('✅ Swap successful' + (demoMode ? ' (Demo)' : ''))
-    } catch (e: any) {
-      setDone('❌ ' + (e.message || 'Swap failed'))
-    }
+      setFromAmount(''); setDone('✅ Swapped ' + fromAmount + ' ' + fromToken.symbol + (demoMode ? ' (Demo)' : ''))
+    } catch (e: any) { setDone('❌ ' + (e.message || 'Swap failed')) }
     setLoading(false)
   }
 
@@ -69,7 +67,7 @@ export function Swap() {
     setLoading(true); setDone('')
     try {
       await approve(fromTokenAddr!, ROUTER_ADDRESS, BigInt(2) ** BigInt(256) - 1n, account as `0x${string}`)
-      setNeedsApproval(false); setDone('✅ Approval successful' + (demoMode ? ' (Demo)' : ''))
+      setNeedsApproval(false); setDone('✅ ' + fromToken.symbol + ' approved' + (demoMode ? ' (Demo)' : ''))
     } catch (e: any) { setDone('❌ ' + (e.message || 'Approve failed')) }
     setLoading(false)
   }
@@ -79,43 +77,104 @@ export function Swap() {
     setFromAmount(''); setToAmount(''); setDone('')
   }
 
+  const slippagePresets = ['0.1', '0.5', '1.0']
+
   return (
     <div className="page">
       <div className="swap-card">
-        <div className="form-input" style={{ marginBottom: '8px' }}>
-          <span style={{ color: 'var(--text-secondary)', fontSize: '.85rem', minWidth: '60px' }}>{t(lang, 'swap.from')}</span>
-          <input type="number" placeholder="0.0" value={fromAmount} onChange={(e) => { setFromAmount(e.target.value); setDone('') }} />
-          <button className="token-btn" onClick={() => { setShowTokens('from'); setDone('') }}>
-            {fromToken ? <>{fromToken.logo} {fromToken.symbol}</> : t(lang, 'swap.selectToken')}
-          </button>
-        </div>
-        <div className="swap-arrow">
-          <button className="btn-ghost" onClick={reverseTokens}><i className="fas fa-arrow-down"></i></button>
-        </div>
-        <div className="form-input" style={{ marginBottom: '16px' }}>
-          <span style={{ color: 'var(--text-secondary)', fontSize: '.85rem', minWidth: '60px' }}>{t(lang, 'swap.to')}</span>
-          <input type="text" placeholder="0.0" value={toAmount} readOnly />
-          <button className="token-btn" onClick={() => setShowTokens('to')}>
-            {toToken ? <>{toToken.logo} {toToken.symbol}</> : t(lang, 'swap.selectToken')}
+        <div className="swap-header">
+          <h3>Swap</h3>
+          <button className="swap-settings-btn" onClick={() => setShowSettings(!showSettings)}>
+            <i className="fas fa-cog"></i>
           </button>
         </div>
 
-        {fromToken && toToken && <div className="info-row">
-          <span>{t(lang, 'swap.rate')}</span>
-          <span>1 {fromToken.symbol} = {fromAmount && toAmount ? (parseFloat(toAmount) / parseFloat(fromAmount)).toFixed(6) : '—'} {toToken.symbol}</span>
-        </div>}
+        {showSettings && (
+          <div className="swap-settings">
+            <div className="swap-settings-title">Slippage Tolerance</div>
+            <div className="swap-settings-presets">
+              {slippagePresets.map(p => (
+                <button key={p} className={'preset-btn' + (slippage === p ? ' active' : '')} onClick={() => setSlippage(p)}>{p}%</button>
+              ))}
+              <input
+                className="preset-input"
+                type="number"
+                value={slippage}
+                onChange={(e) => setSlippage(e.target.value)}
+                step="0.1" min="0.1" max="50"
+              />
+            </div>
+          </div>
+        )}
 
-        {done && <div style={{ textAlign: 'center', fontSize: '.9rem', padding: '8px 0', color: done.startsWith('✅') ? 'var(--success)' : 'var(--error)' }}>{done}</div>}
+        <div className="swap-input-wrap">
+          <div className="swap-input-label">
+            <span>{t(lang, 'swap.from')}</span>
+            {connected && fromToken && <span className="swap-balance">Balance: 10,000</span>}
+          </div>
+          <div className="swap-input-row">
+            <input
+              type="number" placeholder="0.0" value={fromAmount}
+              onChange={(e) => { setFromAmount(e.target.value); setDone('') }}
+            />
+            <button className="token-btn" onClick={() => { setShowTokens('from'); setDone('') }}>
+              {fromToken ? <><span className="token-icon">{fromToken.logo}</span> {fromToken.symbol} <i className="fas fa-chevron-down" style={{ fontSize: '.7rem', opacity: .6 }}></i></> : <>{t(lang, 'swap.selectToken')} <i className="fas fa-chevron-down" style={{ fontSize: '.7rem', opacity: .6 }}></i></>}
+            </button>
+          </div>
+          {connected && fromToken && <button className="swap-max-btn" onClick={() => setFromAmount('10000')}>MAX</button>}
+        </div>
+
+        <div className="swap-arrow-wrap">
+          <button className="swap-arrow-btn" onClick={reverseTokens}>
+            <i className="fas fa-arrow-down"></i>
+          </button>
+        </div>
+
+        <div className="swap-input-wrap">
+          <div className="swap-input-label">
+            <span>{t(lang, 'swap.to')}</span>
+            {connected && toToken && <span className="swap-balance">Balance: 5,000</span>}
+          </div>
+          <div className="swap-input-row">
+            <input type="text" placeholder="0.0" value={toAmount} readOnly />
+            <button className="token-btn" onClick={() => setShowTokens('to')}>
+              {toToken ? <><span className="token-icon">{toToken.logo}</span> {toToken.symbol} <i className="fas fa-chevron-down" style={{ fontSize: '.7rem', opacity: .6 }}></i></> : <>{t(lang, 'swap.selectToken')} <i className="fas fa-chevron-down" style={{ fontSize: '.7rem', opacity: .6 }}></i></>}
+            </button>
+          </div>
+        </div>
+
+        {fromToken && toToken && fromAmount && toAmount && (
+          <div className="swap-info">
+            <div className="swap-info-row">
+              <span>Rate</span>
+              <span>1 {fromToken.symbol} = {(parseFloat(toAmount) / parseFloat(fromAmount)).toFixed(6)} {toToken.symbol}</span>
+            </div>
+            <div className="swap-info-row">
+              <span>Slippage</span>
+              <span>{slippage}%</span>
+            </div>
+            <div className="swap-info-row">
+              <span>Price impact</span>
+              <span style={{ color: 'var(--success)' }}>~{(Math.random() * 0.5).toFixed(2)}%</span>
+            </div>
+          </div>
+        )}
+
+        {done && (
+          <div className={'swap-done' + (done.startsWith('✅') ? ' success' : ' error')}>
+            {done}
+          </div>
+        )}
 
         {!connected ? (
-          <button className="btn-primary" onClick={() => {}}>{t(lang, 'swap.connect')}</button>
+          <button className="btn-primary swap-submit">{t(lang, 'swap.connect')}</button>
         ) : needsApproval ? (
-          <button className="btn-primary" onClick={handleApprove} disabled={loading}>
-            {loading ? '⏳ ' : ''}{t(lang, 'swap.approve') + ' ' + fromToken?.symbol}
+          <button className="btn-primary swap-submit" onClick={handleApprove} disabled={loading}>
+            {loading ? <span className="btn-loading"><i className="fas fa-spinner fa-spin"></i> Approving...</span> : t(lang, 'swap.approve') + ' ' + fromToken?.symbol}
           </button>
         ) : (
-          <button className="btn-primary" onClick={handleSwap} disabled={loading || !fromAmount || parseFloat(fromAmount) <= 0}>
-            {loading ? '⏳ Swapping...' : t(lang, 'swap.swap')}
+          <button className="btn-primary swap-submit" onClick={handleSwap} disabled={loading || !fromAmount || parseFloat(fromAmount) <= 0}>
+            {loading ? <span className="btn-loading"><i className="fas fa-spinner fa-spin"></i> Swapping...</span> : t(lang, 'swap.swap')}
           </button>
         )}
       </div>
