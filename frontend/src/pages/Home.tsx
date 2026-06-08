@@ -49,57 +49,114 @@ export function Home() {
     return () => { if (chartInstance.current) chartInstance.current.destroy() }
   }, [])
 
+  const products = [
+    { icon: '🔄', key: 'prod1', accent: '#14B8A6', nav: '/swap' },
+    { icon: '💧', key: 'prod2', accent: '#F59E0B', nav: '/pool' },
+    { icon: '💎', key: 'prod3', accent: '#A855F7', nav: '/swap' },
+    { icon: '🏛️', key: 'prod4', accent: '#3B82F6', nav: '/swap' },
+  ]
+
+  const steps = [
+    { key: 'step1' },
+    { key: 'step2' },
+    { key: 'step3' },
+  ]
+
   return (
-    <div className="page">
-      <div className="hero">
-        <h1>{t(lang, 'home.title')}</h1>
-        <p>{t(lang, 'home.subtitle')}</p>
-        <div className="hero-btns">
+    <div className="page home-page">
+      {/* Hero */}
+      <div className="home-hero">
+        <div className="home-hero-bg">
+          <div className="home-grid"></div>
+        </div>
+        <div className="home-hero-content">
+          <div className="home-hero-badge">
+            <span style={{ width: 8, height: 8, borderRadius: '50%', background: '#6EE7B7', display: 'inline-block' }}></span>
+            {t(lang, 'home.badge')}
+          </div>
+          <h1>{t(lang, 'home.title')}</h1>
+          <p>{t(lang, 'home.subtitle')}</p>
+          <div className="home-hero-btns">
+            <button className="btn-primary" onClick={() => navigate('/swap')}>
+              <i className="fas fa-rocket"></i> {t(lang, 'home.launch')}
+            </button>
+            <button className="btn-secondary" onClick={() => document.getElementById('ecosystem')?.scrollIntoView({ behavior: 'smooth' })}>
+              <i className="fas fa-book"></i> {t(lang, 'home.learn')}
+            </button>
+          </div>
+          <div className="home-hero-stats">
+            <div className="home-hero-stat">
+              <div className="home-hero-stat-value">$156K</div>
+              <div className="home-hero-stat-label">{t(lang, 'home.heroStat1')}</div>
+            </div>
+            <div className="home-hero-stat">
+              <div className="home-hero-stat-value">$8.2K</div>
+              <div className="home-hero-stat-label">{t(lang, 'home.heroStat2')}</div>
+            </div>
+            <div className="home-hero-stat">
+              <div className="home-hero-stat-value">4</div>
+              <div className="home-hero-stat-label">{t(lang, 'home.heroStat3')}</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* Ecosystem / Products */}
+      <div className="home-section" id="ecosystem">
+        <div className="home-section-label">{t(lang, 'home.sectionLabel')}</div>
+        <h2 className="home-section-title">{t(lang, 'home.sectionTitle')}</h2>
+        <p className="home-section-desc">{t(lang, 'home.sectionDesc')}</p>
+        <div className="home-products" style={{ maxWidth: 1100, margin: '0 auto' }}>
+          {products.map((p) => (
+            <div key={p.key} className="home-product-card" onClick={() => navigate(p.nav)}
+              onMouseEnter={(e) => e.currentTarget.style.setProperty('--accent-current', p.accent)}>
+              <div className="home-product-icon">{p.icon}</div>
+              <div className="home-product-title">{t(lang, 'home.' + p.key + '_title')}</div>
+              <div className="home-product-desc">{t(lang, 'home.' + p.key + '_desc')}</div>
+              <div className="home-product-link">
+                {t(lang, 'home.launch')} <i className="fas fa-arrow-right" style={{ fontSize: '.75rem' }}></i>
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
+
+      {/* How it works */}
+      <div className="home-section">
+        <div className="home-section-label">How it works</div>
+        <h2 className="home-section-title">Three Simple Steps</h2>
+        <p className="home-section-desc">Get started with Nord Protocol in minutes</p>
+        <div className="home-steps" style={{ maxWidth: 900, margin: '0 auto' }}>
+          {steps.map((s, i) => (
+            <div key={s.key} className="home-step">
+              <div className="home-step-num">{i + 1}</div>
+              <h3>{t(lang, 'home.' + s.key + '_title')}</h3>
+              <p>{t(lang, 'home.' + s.key + '_desc')}</p>
+            </div>
+          ))}
+        </div>
+      </div>
+
+      {/* TVL Chart */}
+      <div className="home-section">
+        <div className="card" style={{ maxWidth: 900, margin: '0 auto', borderColor: 'rgba(20,184,166,.2)' }}>
+          <h3 style={{ marginBottom: '16px', fontWeight: 700 }}>📊 {t(lang, 'home.chart')}</h3>
+          <div className="chart-container"><canvas ref={chartRef}></canvas></div>
+        </div>
+      </div>
+
+      {/* CTA */}
+      <div className="home-section">
+        <div className="home-cta">
+          <h2>{t(lang, 'home.ctaTitle')}</h2>
+          <p>{t(lang, 'home.ctaDesc')}</p>
           <button className="btn-primary" onClick={() => navigate('/swap')}>
-            <i className="fas fa-rocket"></i> {t(lang, 'home.launch')}
-          </button>
-          <button className="btn-secondary" onClick={() => window.open('#', '_blank')}>
-            <i className="fas fa-book"></i> {t(lang, 'home.learn')}
+            <i className="fas fa-arrow-right"></i> {t(lang, 'home.cta')}
           </button>
         </div>
       </div>
 
-      <div className="stats-grid">
-        <div className="stat-card"><div className="stat-label">{t(lang, 'home.tvl')}</div><div className="stat-value">$156K</div><div className="stat-change up">↑ 12.3%</div></div>
-        <div className="stat-card"><div className="stat-label">{t(lang, 'home.volume')}</div><div className="stat-value">$8.2K</div><div className="stat-change up">↑ 5.1%</div></div>
-        <div className="stat-card"><div className="stat-label">{t(lang, 'home.pairs')}</div><div className="stat-value">4</div></div>
-        <div className="stat-card"><div className="stat-label">{t(lang, 'home.nordPrice')}</div><div className="stat-value">$0.42</div><div className="stat-change down">↓ 2.1%</div></div>
-      </div>
-
-      <div className="card" style={{ marginBottom: '32px' }}>
-        <h3 style={{ marginBottom: '16px', fontWeight: 700 }}>📊 {t(lang, 'home.chart')}</h3>
-        <div className="chart-container"><canvas ref={chartRef}></canvas></div>
-      </div>
-
-      <div className="grid-3" style={{ marginBottom: '40px' }}>
-        <div className="card">
-          <div style={{ fontSize: '2rem', marginBottom: '12px' }}>🔄</div>
-          <h3 style={{ marginBottom: '8px' }}>{t(lang, 'home.s1_title')}</h3>
-          <p style={{ color: 'var(--text-secondary)', fontSize: '.9rem', lineHeight: 1.6 }}>{t(lang, 'home.s1_desc')}</p>
-        </div>
-        <div className="card">
-          <div style={{ fontSize: '2rem', marginBottom: '12px' }}>🏛️</div>
-          <h3 style={{ marginBottom: '8px' }}>{t(lang, 'home.s2_title')}</h3>
-          <p style={{ color: 'var(--text-secondary)', fontSize: '.9rem', lineHeight: 1.6 }}>{t(lang, 'home.s2_desc')}</p>
-        </div>
-        <div className="card">
-          <div style={{ fontSize: '2rem', marginBottom: '12px' }}>💎</div>
-          <h3 style={{ marginBottom: '8px' }}>{t(lang, 'home.s3_title')}</h3>
-          <p style={{ color: 'var(--text-secondary)', fontSize: '.9rem', lineHeight: 1.6 }}>{t(lang, 'home.s3_desc')}</p>
-        </div>
-      </div>
-
-      <div style={{ textAlign: 'center', marginBottom: '40px' }}>
-        <button className="btn-primary" style={{ width: 'auto', padding: '14px 40px' }} onClick={() => navigate('/swap')}>
-          <i className="fas fa-arrow-right"></i> {t(lang, 'home.cta')}
-        </button>
-      </div>
-
+      {/* Footer */}
       <footer>
         <p>© 2026 {t(lang, 'home.footer')}</p>
         <p style={{ fontSize: '.75rem', marginTop: '8px', color: 'var(--text-secondary)' }}>NORD max supply: 5,000,000</p>
