@@ -1,0 +1,55 @@
+﻿=== NORD PROTOCOL - DEPLOYMENT GUIDE ===
+
+FILES: E:\nord-contracts\
+
+--- REMIX DEPLOYMENT ORDER ---
+
+Step 1: NordToken.sol
+  - Compile (0.8.24)
+  - Deploy (no args)
+  - Call setWallets(founder, dao, platform, liquidity, staking, airdrop, grants, listing)
+  - Call distribute()
+
+Step 2: NordFactory.sol
+  - Compile (0.8.24)
+  - Deploy with args:
+    _feeToSetter = deployer address
+    _dao         = DAO treasury wallet
+    _platform    = Platform wallet
+    _founder     = Founder wallet
+
+Step 3: NordRouter.sol
+  - Compile (0.8.24)
+  - Deploy with args:
+    _factory = NordFactory address
+    _WETH    = 0x471EcE3750Da237f93B8E339c536989b8978a438 (CELO)
+           or 0x0BE9e53fd7EDaC9F859882AfdDa116645287C629 (FUSE)
+
+Step 4: NordStaking.sol
+  - Compile (0.8.24)
+  - Deploy with args:
+    _stakingToken = NORD token address
+    _rewardToken  = NORD token address
+  - Call setRewardRate(amount)
+
+Step 5: NordUSD.sol
+  - Compile (0.8.24)
+  - Deploy with args:
+    _owner   = deployer address
+    _dao     = DAO treasury wallet
+    _platform= Platform wallet
+    _founder = Founder wallet
+    _staking = NordStaking address
+  - Call addCollateral(cUSD address) for each collateral token
+
+--- CREATE PAIRS ---
+factory.createPair(TOKEN_A, TOKEN_B)
+
+--- ADD LIQUIDITY ---
+token.approve(router, amount)
+router.addLiquidity(tokenA, tokenB, amountAD, amountBD, amountAMin, amountBMin, to, deadline)
+
+--- VERIFICATION ---
+- CeloScan: https://celoscan.io/verifyContract
+- Fuse Explorer: https://explorer.fuse.io/verifyContract
+- Flatten contracts first (use Remix plugin or hardhat flatten)
