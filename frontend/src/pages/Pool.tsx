@@ -35,18 +35,18 @@ export function Pool() {
     <div className="page">
       <div className="pool-header">
         <div>
-          <h2 className="pool-title">Pools</h2>
-          <p className="pool-subtitle">Earn fees by providing liquidity</p>
+          <h2 className="pool-title">{t(lang, 'pool.title')}</h2>
+          <p className="pool-subtitle">{t(lang, 'pool.subtitle')}</p>
         </div>
         <button className="btn-primary" style={{ width: 'auto', padding: '12px 28px', fontSize: '.9rem' }} onClick={() => navigate('/liquidity')}>
-          <i className="fas fa-plus"></i> New Position
+          <i className="fas fa-plus"></i> {t(lang, 'pool.newPosition')}
         </button>
       </div>
 
       <div className="pool-search-bar">
         <i className="fas fa-search" style={{ color: 'var(--text-secondary)' }}></i>
         <input
-          placeholder="Search by pair name"
+          placeholder={t(lang, 'pool.search')}
           value={search}
           onChange={(e) => setSearch(e.target.value)}
         />
@@ -60,20 +60,20 @@ export function Pool() {
                 <span className="pool-icon">{p.iconA}</span>
                 <span className="pool-icon">{p.iconB}</span>
               </div>
-              <span className="pool-card-fee">{p.fee}</span>
+              <span className="pool-card-fee">{t(lang, 'pool.fee')} {p.fee}</span>
             </div>
             <div className="pool-card-pair">{p.pair}</div>
             <div className="pool-card-stats">
               <div className="pool-card-stat">
-                <span className="pool-card-stat-label">TVL</span>
+                <span className="pool-card-stat-label">{t(lang, 'pool.tvl')}</span>
                 <span className="pool-card-stat-value">{p.tvl}</span>
               </div>
               <div className="pool-card-stat">
-                <span className="pool-card-stat-label">Volume 24h</span>
+                <span className="pool-card-stat-label">{t(lang, 'pool.volume24h')}</span>
                 <span className="pool-card-stat-value">{p.volume24h}</span>
               </div>
               <div className="pool-card-stat">
-                <span className="pool-card-stat-label">APR</span>
+                <span className="pool-card-stat-label">{t(lang, 'pool.apr')}</span>
                 <span className="pool-card-stat-value" style={{ color: p.apr !== '—' ? 'var(--success)' : 'var(--text-secondary)' }}>{p.apr}</span>
               </div>
             </div>
@@ -81,7 +81,7 @@ export function Pool() {
         )) : (
           <div className="pool-empty">
             <div className="pool-empty-icon">🔍</div>
-            <p>No pools found</p>
+            <p>{t(lang, 'pool.noPools')}</p>
           </div>
         )}
       </div>

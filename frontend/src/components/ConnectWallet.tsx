@@ -28,14 +28,14 @@ export function ConnectWallet() {
     : ''
 
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+    <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
       <button className={'btn-wallet' + (connected ? ' connected' : '')} onClick={handleClick} style={{ width: '100%', justifyContent: 'center' }}>
         <i className={'fas ' + (connected ? 'fa-wallet' : 'fa-plug')}></i>
         {connected ? shortAddr : t(lang, 'common.connect')}
       </button>
       {!connected && (
-        <button className="btn-secondary" onClick={enterDemo} style={{ width: '100%', justifyContent: 'center', fontSize: '.8rem', padding: '8px 12px' }}>
-          <i className="fas fa-flask"></i> Demo Mode
+        <button className="btn-demo" onClick={enterDemo}>
+          <i className="fas fa-flask"></i> {t(lang, 'common.demo')}
         </button>
       )}
     </div>

@@ -57,7 +57,7 @@ export function Swap() {
       const amountOutMin = amounts[amounts.length - 1] * BigInt(Math.round((100 - parseFloat(slippage)) * 10)) / 1000n
       const deadline = BigInt(Math.floor(Date.now() / 1000) + 1200)
       await swap(amountIn, amountOutMin, [fromTokenAddr!, toTokenAddr!], account as `0x${string}`, deadline, account as `0x${string}`)
-      setFromAmount(''); setDone('✅ Swapped ' + fromAmount + ' ' + fromToken.symbol + (demoMode ? ' (Demo)' : ''))
+      setFromAmount(''); setDone('✅ ' + fromAmount + ' ' + fromToken.symbol + (demoMode ? ' (Demo)' : ''))
     } catch (e: any) { setDone('❌ ' + (e.message || 'Swap failed')) }
     setLoading(false)
   }
@@ -83,15 +83,15 @@ export function Swap() {
     <div className="page">
       <div className="swap-card">
         <div className="swap-header">
-          <h3>Swap</h3>
+          <h3>{t(lang, 'swap.title')}</h3>
           <button className="swap-settings-btn" onClick={() => setShowSettings(!showSettings)}>
-            <i className="fas fa-cog"></i>
+            <i className="fas fa-sliders"></i>
           </button>
         </div>
 
         {showSettings && (
           <div className="swap-settings">
-            <div className="swap-settings-title">Slippage Tolerance</div>
+            <div className="swap-settings-title">{t(lang, 'swap.slippageTitle')}</div>
             <div className="swap-settings-presets">
               {slippagePresets.map(p => (
                 <button key={p} className={'preset-btn' + (slippage === p ? ' active' : '')} onClick={() => setSlippage(p)}>{p}%</button>
@@ -110,7 +110,7 @@ export function Swap() {
         <div className="swap-input-wrap">
           <div className="swap-input-label">
             <span>{t(lang, 'swap.from')}</span>
-            {connected && fromToken && <span className="swap-balance">Balance: 10,000</span>}
+            {connected && fromToken && <span className="swap-balance">{t(lang, 'swap.balance')}: 10,000</span>}
           </div>
           <div className="swap-input-row">
             <input
@@ -121,7 +121,7 @@ export function Swap() {
               {fromToken ? <><span className="token-icon">{fromToken.logo}</span> {fromToken.symbol} <i className="fas fa-chevron-down" style={{ fontSize: '.7rem', opacity: .6 }}></i></> : <>{t(lang, 'swap.selectToken')} <i className="fas fa-chevron-down" style={{ fontSize: '.7rem', opacity: .6 }}></i></>}
             </button>
           </div>
-          {connected && fromToken && <button className="swap-max-btn" onClick={() => setFromAmount('10000')}>MAX</button>}
+          {connected && fromToken && <button className="swap-max-btn" onClick={() => setFromAmount('10000')}>{t(lang, 'swap.max')}</button>}
         </div>
 
         <div className="swap-arrow-wrap">
@@ -133,7 +133,7 @@ export function Swap() {
         <div className="swap-input-wrap">
           <div className="swap-input-label">
             <span>{t(lang, 'swap.to')}</span>
-            {connected && toToken && <span className="swap-balance">Balance: 5,000</span>}
+            {connected && toToken && <span className="swap-balance">{t(lang, 'swap.balance')}: 5,000</span>}
           </div>
           <div className="swap-input-row">
             <input type="text" placeholder="0.0" value={toAmount} readOnly />
@@ -146,35 +146,33 @@ export function Swap() {
         {fromToken && toToken && fromAmount && toAmount && (
           <div className="swap-info">
             <div className="swap-info-row">
-              <span>Rate</span>
+              <span>{t(lang, 'swap.rate')}</span>
               <span>1 {fromToken.symbol} = {(parseFloat(toAmount) / parseFloat(fromAmount)).toFixed(6)} {toToken.symbol}</span>
             </div>
             <div className="swap-info-row">
-              <span>Slippage</span>
+              <span>{t(lang, 'swap.slippage')}</span>
               <span>{slippage}%</span>
             </div>
             <div className="swap-info-row">
-              <span>Price impact</span>
+              <span>{t(lang, 'swap.priceImpact')}</span>
               <span style={{ color: 'var(--success)' }}>~{(Math.random() * 0.5).toFixed(2)}%</span>
             </div>
           </div>
         )}
 
         {done && (
-          <div className={'swap-done' + (done.startsWith('✅') ? ' success' : ' error')}>
-            {done}
-          </div>
+          <div className={'swap-done' + (done.startsWith('✅') ? ' success' : ' error')}>{done}</div>
         )}
 
         {!connected ? (
           <button className="btn-primary swap-submit">{t(lang, 'swap.connect')}</button>
         ) : needsApproval ? (
           <button className="btn-primary swap-submit" onClick={handleApprove} disabled={loading}>
-            {loading ? <span className="btn-loading"><i className="fas fa-spinner fa-spin"></i> Approving...</span> : t(lang, 'swap.approve') + ' ' + fromToken?.symbol}
+            {loading ? <span className="btn-loading"><i className="fas fa-spinner fa-spin"></i> {t(lang, 'swap.approving')}</span> : t(lang, 'swap.approve') + ' ' + fromToken?.symbol}
           </button>
         ) : (
           <button className="btn-primary swap-submit" onClick={handleSwap} disabled={loading || !fromAmount || parseFloat(fromAmount) <= 0}>
-            {loading ? <span className="btn-loading"><i className="fas fa-spinner fa-spin"></i> Swapping...</span> : t(lang, 'swap.swap')}
+            {loading ? <span className="btn-loading"><i className="fas fa-spinner fa-spin"></i> {t(lang, 'swap.swapping')}</span> : t(lang, 'swap.swap')}
           </button>
         )}
       </div>
