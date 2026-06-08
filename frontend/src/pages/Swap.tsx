@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from 'react'
+import { useState, useEffect } from 'react'
 import { useStore } from '../store'
 import { t } from '../i18n'
 import { TokenSelect } from '../components/TokenSelect'
@@ -8,7 +8,7 @@ import { toWei, fromWei } from '../utils/format'
 import type { TokenInfo } from '../config/tokens'
 
 export function Swap() {
-  const { lang, connected, account } = useStore()
+  const { lang, connected, account, demoMode } = useStore()
   const { getAmountsOut, getAllowance, approve, swap } = useContract()
 
   const [fromToken, setFromToken] = useState<TokenInfo | null>(null)
@@ -18,6 +18,7 @@ export function Swap() {
   const [showTokens, setShowTokens] = useState<'from' | 'to' | null>(null)
   const [loading, setLoading] = useState(false)
   const [needsApproval, setNeedsApproval] = useState(false)
+  const [done, setDone] = useState('')
 
   const fromTokenAddr = fromToken?.address as `0x${string}` | undefined
   const toTokenAddr = toToken?.address as `0x${string}` | undefined
@@ -48,7 +49,7 @@ export function Swap() {
 
   const handleSwap = async () => {
     if (!fromToken || !toToken || !account || !fromAmount) return
-    setLoading(true)
+    setLoading(true); setDone('')
     try {
       const amountIn = toWei(fromAmount, fromToken.decimals)
       const amounts = await getAmountsOut(amountIn, [fromTokenAddr!, toTokenAddr!])
@@ -56,26 +57,26 @@ export function Swap() {
       const amountOutMin = amounts[amounts.length - 1] * 995n / 1000n
       const deadline = BigInt(Math.floor(Date.now() / 1000) + 1200)
       await swap(amountIn, amountOutMin, [fromTokenAddr!, toTokenAddr!], account as `0x${string}`, deadline, account as `0x${string}`)
-      setFromAmount('')
+      setFromAmount(''); setDone('✅ Swap successful' + (demoMode ? ' (Demo)' : ''))
     } catch (e: any) {
-      alert(e.message || 'Swap failed')
+      setDone('❌ ' + (e.message || 'Swap failed'))
     }
     setLoading(false)
   }
 
   const handleApprove = async () => {
     if (!fromToken || !account) return
-    setLoading(true)
+    setLoading(true); setDone('')
     try {
       await approve(fromTokenAddr!, ROUTER_ADDRESS, BigInt(2) ** BigInt(256) - 1n, account as `0x${string}`)
-      setNeedsApproval(false)
-    } catch (e: any) { alert(e.message || 'Approve failed') }
+      setNeedsApproval(false); setDone('✅ Approval successful' + (demoMode ? ' (Demo)' : ''))
+    } catch (e: any) { setDone('❌ ' + (e.message || 'Approve failed')) }
     setLoading(false)
   }
 
   const reverseTokens = () => {
     const tmp = fromToken; setFromToken(toToken); setToToken(tmp)
-    setFromAmount(''); setToAmount('')
+    setFromAmount(''); setToAmount(''); setDone('')
   }
 
   return (
@@ -83,8 +84,8 @@ export function Swap() {
       <div className="swap-card">
         <div className="form-input" style={{ marginBottom: '8px' }}>
           <span style={{ color: 'var(--text-secondary)', fontSize: '.85rem', minWidth: '60px' }}>{t(lang, 'swap.from')}</span>
-          <input type="number" placeholder="0.0" value={fromAmount} onChange={(e) => setFromAmount(e.target.value)} />
-          <button className="token-btn" onClick={() => setShowTokens('from')}>
+          <input type="number" placeholder="0.0" value={fromAmount} onChange={(e) => { setFromAmount(e.target.value); setDone('') }} />
+          <button className="token-btn" onClick={() => { setShowTokens('from'); setDone('') }}>
             {fromToken ? <>{fromToken.logo} {fromToken.symbol}</> : t(lang, 'swap.selectToken')}
           </button>
         </div>
@@ -104,15 +105,17 @@ export function Swap() {
           <span>1 {fromToken.symbol} = {fromAmount && toAmount ? (parseFloat(toAmount) / parseFloat(fromAmount)).toFixed(6) : '—'} {toToken.symbol}</span>
         </div>}
 
+        {done && <div style={{ textAlign: 'center', fontSize: '.9rem', padding: '8px 0', color: done.startsWith('✅') ? 'var(--success)' : 'var(--error)' }}>{done}</div>}
+
         {!connected ? (
-          <button className="btn-primary">{t(lang, 'swap.connect')}</button>
+          <button className="btn-primary" onClick={() => {}}>{t(lang, 'swap.connect')}</button>
         ) : needsApproval ? (
           <button className="btn-primary" onClick={handleApprove} disabled={loading}>
-            {loading ? '...' : t(lang, 'swap.approve') + ' ' + fromToken?.symbol}
+            {loading ? '⏳ ' : ''}{t(lang, 'swap.approve') + ' ' + fromToken?.symbol}
           </button>
         ) : (
           <button className="btn-primary" onClick={handleSwap} disabled={loading || !fromAmount || parseFloat(fromAmount) <= 0}>
-            {loading ? '...' : t(lang, 'swap.swap')}
+            {loading ? '⏳ Swapping...' : t(lang, 'swap.swap')}
           </button>
         )}
       </div>
@@ -122,7 +125,7 @@ export function Swap() {
           onSelect={(token) => {
             if (showTokens === 'from') { setFromToken(token); if (toToken?.address === token.address) setToToken(null) }
             else { setToToken(token); if (fromToken?.address === token.address) setFromToken(null) }
-            setShowTokens(null)
+            setShowTokens(null); setDone('')
           }}
           onClose={() => setShowTokens(null)}
         />

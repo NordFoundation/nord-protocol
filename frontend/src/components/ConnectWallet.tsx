@@ -2,10 +2,10 @@ import { useStore } from '../store'
 import { t } from '../i18n'
 
 export function ConnectWallet() {
-  const { connected, account, setConnected, lang } = useStore()
+  const { connected, account, setConnected, enterDemo, exitDemo, demoMode, lang } = useStore()
 
   const handleClick = async () => {
-    if (connected) return
+    if (connected) { if (demoMode) exitDemo(); return }
     if (!window.ethereum) {
       window.open('https://metamask.io/download/', '_blank')
       return
@@ -21,12 +21,23 @@ export function ConnectWallet() {
     }
   }
 
-  const shortAddr = account ? account.slice(0, 6) + '...' + account.slice(-4) : ''
+  const shortAddr = account
+    ? account.startsWith('0x1234')
+      ? '🧪 Demo'
+      : account.slice(0, 6) + '...' + account.slice(-4)
+    : ''
 
   return (
-    <button className={'btn-wallet' + (connected ? ' connected' : '')} onClick={handleClick}>
-      <i className={'fas ' + (connected ? 'fa-wallet' : 'fa-plug')}></i>
-      {connected ? shortAddr : t(lang, 'common.connect')}
-    </button>
+    <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+      <button className={'btn-wallet' + (connected ? ' connected' : '')} onClick={handleClick} style={{ width: '100%', justifyContent: 'center' }}>
+        <i className={'fas ' + (connected ? 'fa-wallet' : 'fa-plug')}></i>
+        {connected ? shortAddr : t(lang, 'common.connect')}
+      </button>
+      {!connected && (
+        <button className="btn-secondary" onClick={enterDemo} style={{ width: '100%', justifyContent: 'center', fontSize: '.8rem', padding: '8px 12px' }}>
+          <i className="fas fa-flask"></i> Demo Mode
+        </button>
+      )}
+    </div>
   )
 }

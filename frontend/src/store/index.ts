@@ -9,11 +9,14 @@ interface AppState {
   customTokens: TokenInfo[]
   connected: boolean
   account: string | null
+  demoMode: boolean
   setLang: (l: Lang) => void
   toggleSidebar: () => void
   closeSidebar: () => void
   addCustomToken: (t: TokenInfo) => void
   setConnected: (a: string | null) => void
+  enterDemo: () => void
+  exitDemo: () => void
   getAllTokens: () => TokenInfo[]
 }
 
@@ -30,12 +33,15 @@ function saveTokens(tokens: TokenInfo[]) {
   localStorage.setItem(STORAGE_KEY, JSON.stringify(tokens))
 }
 
+const DEMO_ADDR = '0x1234...Demo'
+
 export const useStore = create<AppState>((set, get) => ({
   lang: (localStorage.getItem('nord_lang') as Lang) || 'en',
   sidebarOpen: false,
   customTokens: loadTokens(),
   connected: false,
   account: null,
+  demoMode: false,
 
   setLang: (l) => {
     localStorage.setItem('nord_lang', l)
@@ -51,6 +57,8 @@ export const useStore = create<AppState>((set, get) => ({
       set({ customTokens: updated })
     }
   },
-  setConnected: (account) => set({ connected: !!account, account }),
+  setConnected: (account) => set({ connected: !!account, account, demoMode: false }),
+  enterDemo: () => set({ connected: true, account: DEMO_ADDR, demoMode: true }),
+  exitDemo: () => set({ connected: false, account: null, demoMode: false }),
   getAllTokens: () => [...DEFAULT_TOKENS, ...get().customTokens],
 }))
